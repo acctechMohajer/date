@@ -1,0 +1,352 @@
+/* ====== شخصی‌سازی از همین‌جا ====== */
+const CONFIG = {
+  email: "senator.x.x85@gmail.com",
+  askTitle: "با من میای سر قرار؟",
+  askSub: "فقط یه سوال ساده‌ست... جواب درست هم فقط یکیشه 😉",
+  dateTitle: "کی وقت داری؟",
+  dateSub: "یه تاریخ و ساعت خوب برام انتخاب کن",
+  foodTitle: "چی سفارش میدی؟",
+  foodSub: "یه چیز خوشمزه انتخاب کن که مهمونت باشی",
+  foodNext: "بریم که بریم 💌",
+  confirmTitle: "خوشحالم نگفتی نه!",
+  confirmFooter:
+    "برای اینکه ازت درخواست کنم یه وبسایت طراحی کردم، چیز مهمی نبود 🙈",
+  pickupText: "پس آماده باش، خودم میام دنبالت 🚗💨",
+  foods: [
+    { id: "pizza", name: "پیتزا", emoji: "🍕" },
+    { id: "coffee", name: "قهوه", emoji: "☕" },
+    { id: "kubideh", name: "کوبیده", emoji: "🥙" },
+    { id: "pasta", name: "پاستا", emoji: "🍝" },
+    { id: "nachos", name: "ناچوز", emoji: "🧀" },
+    { id: "eskimo", name: "اسکیمو", emoji: "🍦" },
+    { id: "croissant", name: "کروسان بستنی", emoji: "🥐" },
+  ],
+};
+
+const MONTHS = [
+  "فروردین",
+  "اردیبهشت",
+  "خرداد",
+  "تیر",
+  "مرداد",
+  "شهریور",
+  "مهر",
+  "آبان",
+  "آذر",
+  "دی",
+  "بهمن",
+  "اسفند",
+];
+const WEEKDAYS = [
+  "یکشنبه",
+  "دوشنبه",
+  "سه‌شنبه",
+  "چهارشنبه",
+  "پنجشنبه",
+  "جمعه",
+  "شنبه",
+];
+const CLICK_EMOJIS = ["☁️", "🌤️", "💙", "🩵", "✨", "🕊️", "💎", "🌊"];
+
+const state = {
+  step: 0,
+  date: "",
+  time: "",
+  food: null,
+  noScale: 1,
+  yesScale: 1,
+  sending: false,
+};
+
+const bodyEl = document.getElementById("step-body");
+const progressEl = document.getElementById("progress");
+
+function gregorianToJalali(gy, gm, gd) {
+  const gdm = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+  let jy = gy <= 1600 ? 0 : 979;
+  gy -= gy <= 1600 ? 621 : 1600;
+  const gy2 = gm > 2 ? gy + 1 : gy;
+  let days =
+    365 * gy +
+    Math.floor((gy2 + 3) / 4) -
+    Math.floor((gy2 + 99) / 100) +
+    Math.floor((gy2 + 399) / 400) -
+    80 +
+    gd +
+    gdm[gm - 1];
+  jy += 33 * Math.floor(days / 12053);
+  days %= 12053;
+  jy += 4 * Math.floor(days / 1461);
+  days %= 1461;
+  if (days > 365) {
+    jy += Math.floor((days - 1) / 365);
+    days = (days - 1) % 365;
+  }
+  const jm =
+    days < 186 ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+  const jd = 1 + (days < 186 ? days % 31 : (days - 186) % 30);
+  return [jy, jm, jd];
+}
+
+function formatDateTime(dateValue, timeValue) {
+  const [y, m, d] = dateValue.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  const [jy, jm, jd] = gregorianToJalali(y, m, d);
+  const weekday = WEEKDAYS[dt.getDay()];
+  const [hh, mm] = timeValue.split(":");
+  return `${weekday} ${jd} ${MONTHS[jm - 1]} ساعت ${hh}:${mm}`;
+}
+
+function renderProgress() {
+  progressEl.innerHTML = [0, 1, 2, 3]
+    .map((i) => `<span class="dot ${i === state.step ? "active" : ""}"></span>`)
+    .join("");
+}
+
+function spawnSky() {
+  const sky = document.getElementById("sky");
+  for (let i = 0; i < 7; i++) {
+    const cloud = document.createElement("div");
+    cloud.className = "cloud";
+    const w = 90 + Math.random() * 140;
+    cloud.style.width = w + "px";
+    cloud.style.height = w * 0.38 + "px";
+    cloud.style.top = 6 + Math.random() * 78 + "%";
+    cloud.style.left = "-25%";
+    cloud.style.opacity = 0.35 + Math.random() * 0.4;
+    cloud.style.animationDuration = 22 + Math.random() * 28 + "s";
+    cloud.style.animationDelay = -Math.random() * 30 + "s";
+    sky.appendChild(cloud);
+  }
+  const emojis = ["☁️", "🌤️", "💙", "🩵", "✨", "🕊️"];
+  for (let i = 0; i < 14; i++) {
+    const el = document.createElement("div");
+    el.className = "sky-emoji";
+    el.textContent = emojis[i % emojis.length];
+    el.style.left = Math.random() * 92 + "%";
+    el.style.top = Math.random() * 88 + "%";
+    el.style.fontSize = 16 + Math.random() * 18 + "px";
+    el.style.animationDuration = 4 + Math.random() * 5 + "s";
+    el.style.animationDelay = -Math.random() * 4 + "s";
+    sky.appendChild(el);
+  }
+}
+
+function burst(x, y) {
+  const layer = document.getElementById("click-fx");
+  for (let i = 0; i < 7; i++) {
+    const bit = document.createElement("span");
+    bit.className = "click-bit";
+    bit.textContent =
+      CLICK_EMOJIS[Math.floor(Math.random() * CLICK_EMOJIS.length)];
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 40 + Math.random() * 70;
+    bit.style.left = x + "px";
+    bit.style.top = y + "px";
+    bit.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+    bit.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+    layer.appendChild(bit);
+    setTimeout(() => bit.remove(), 900);
+  }
+}
+
+function defaultDate() {
+  const t = new Date();
+  t.setDate(t.getDate() + 1);
+  return t.toISOString().slice(0, 10);
+}
+
+function renderAsk() {
+  bodyEl.innerHTML = `
+    <div class="hero-emoji">🥺</div>
+    <h1>${CONFIG.askTitle}</h1>
+    <p class="sub">${CONFIG.askSub}</p>
+    <div class="actions">
+      <button class="btn btn-no" id="no-btn" type="button">نه</button>
+      <button class="btn btn-yes" id="yes-btn" type="button">💙 آره</button>
+    </div>
+    <p class="hint">دکمه نه غیرفعاله؛ فقط آره تو رو می‌بره مرحله بعد.</p>
+  `;
+
+  const noBtn = document.getElementById("no-btn");
+  const yesBtn = document.getElementById("yes-btn");
+
+  noBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    burst(e.clientX, e.clientY);
+    state.noScale = Math.max(0.35, state.noScale - 0.18);
+    state.yesScale = Math.min(1.55, state.yesScale + 0.12);
+    noBtn.style.transform = `scale(${state.noScale})`;
+    yesBtn.style.transform = `scale(${state.yesScale})`;
+    if (state.noScale <= 0.4) {
+      noBtn.disabled = true;
+      noBtn.classList.add("is-disabled");
+    }
+  });
+
+  yesBtn.addEventListener("click", (e) => {
+    burst(e.clientX, e.clientY);
+    state.step = 1;
+    render();
+  });
+}
+
+function renderDate() {
+  const dateVal = state.date || defaultDate();
+  const timeVal = state.time || "16:21";
+  bodyEl.innerHTML = `
+    <div class="hero-emoji">📅</div>
+    <h1>${CONFIG.dateTitle}</h1>
+    <p class="sub">${CONFIG.dateSub}</p>
+    <div class="fields">
+      <label>تاریخ
+        <input type="date" id="date-input" value="${dateVal}" />
+      </label>
+      <label>ساعت
+        <input type="time" id="time-input" value="${timeVal}" />
+      </label>
+    </div>
+    <button class="btn btn-primary" id="next-date" type="button">بعدی ⭐</button>
+  `;
+  document.getElementById("next-date").addEventListener("click", (e) => {
+    burst(e.clientX, e.clientY);
+    state.date = document.getElementById("date-input").value;
+    state.time = document.getElementById("time-input").value;
+    if (!state.date || !state.time) return;
+    state.step = 2;
+    render();
+  });
+}
+
+function renderFood() {
+  bodyEl.innerHTML = `
+    <div class="hero-emoji">🍽️</div>
+    <h1>${CONFIG.foodTitle}</h1>
+    <p class="sub">${CONFIG.foodSub}</p>
+    <div class="food-grid">
+      ${CONFIG.foods
+        .map(
+          (f) => `
+        <button class="food ${state.food === f.id ? "selected" : ""}" data-id="${f.id}" type="button">
+          <span>${f.emoji}</span>${f.name}
+        </button>
+      `,
+        )
+        .join("")}
+    </div>
+    <button class="btn btn-primary" id="next-food" type="button" ${state.food ? "" : "disabled"}>
+      ${CONFIG.foodNext}
+    </button>
+  `;
+
+  bodyEl.querySelectorAll(".food").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      burst(e.clientX, e.clientY);
+      state.food = btn.dataset.id;
+      renderFood();
+    });
+  });
+
+  document.getElementById("next-food").addEventListener("click", (e) => {
+    if (!state.food) return;
+    burst(e.clientX, e.clientY);
+    state.step = 3;
+    render();
+    sendEmail();
+  });
+}
+
+function selectedFood() {
+  return CONFIG.foods.find((f) => f.id === state.food);
+}
+
+function renderConfirm() {
+  const food = selectedFood();
+  const when = formatDateTime(state.date, state.time);
+  bodyEl.innerHTML = `
+    <div class="hero-emoji">🎉</div>
+    <h1>${CONFIG.confirmTitle}</h1>
+    <div class="result">
+      پس ${when} میام دنبالت، برای ${food.name} ${food.emoji} 🥂
+    </div>
+    <p class="sub">${CONFIG.pickupText}</p>
+    <button class="btn btn-primary" id="send-again" type="button">ارسال جزئیات با ایمیل ☁️</button>
+    <p class="status" id="mail-status">در حال آماده کردن ایمیل...</p>
+    <p class="note">${CONFIG.confirmFooter}</p>
+  `;
+  document.getElementById("send-again").addEventListener("click", (e) => {
+    burst(e.clientX, e.clientY);
+    sendEmail(true);
+  });
+}
+
+function mailBody() {
+  const food = selectedFood();
+  return [
+    "یک پاسخ جدید برای دعوت ثبت شد.",
+    `تاریخ و ساعت: ${formatDateTime(state.date, state.time)}`,
+    `سفارش: ${food.emoji} ${food.name}`,
+    `تاریخ میلادی: ${state.date}`,
+    `ساعت: ${state.time}`,
+  ].join("\n");
+}
+
+async function sendEmail(forceMailto = false) {
+  const status = document.getElementById("mail-status");
+  const food = selectedFood();
+  if (!food || state.sending) return;
+  state.sending = true;
+  if (status) status.textContent = "داره جزئیات دیت برات ایمیل میشه...";
+
+  const payload = {
+    _subject: `پاسخ دعوت: ${food.name} | ${state.date} ${state.time}`,
+    date: state.date,
+    time: state.time,
+    jalali: formatDateTime(state.date, state.time),
+    order: `${food.emoji} ${food.name}`,
+    message: mailBody(),
+  };
+
+  try {
+    if (!forceMailto) {
+      const res = await fetch(`https://formsubmit.co/ajax/${CONFIG.email}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        if (status) status.textContent = "جزئیات دیت برات ایمیل شد 💌";
+        state.sending = false;
+        return;
+      }
+    }
+    throw new Error("fallback");
+  } catch {
+    const mailto = `mailto:${CONFIG.email}?subject=${encodeURIComponent(payload._subject)}&body=${encodeURIComponent(mailBody())}`;
+    window.location.href = mailto;
+    if (status)
+      status.textContent =
+        "اگر فرم‌سرویس فعال نبود، برنامه ایمیل باز شد تا همان جزئیات را بفرستی.";
+  } finally {
+    state.sending = false;
+  }
+}
+
+function render() {
+  renderProgress();
+  if (state.step === 0) renderAsk();
+  else if (state.step === 1) renderDate();
+  else if (state.step === 2) renderFood();
+  else renderConfirm();
+}
+
+document.addEventListener("click", (e) => {
+  if (e.target.closest("button, input, label, select")) return;
+  burst(e.clientX, e.clientY);
+});
+
+spawnSky();
+render();
