@@ -1,16 +1,20 @@
 /* ====== شخصی‌سازی از همین‌جا ====== */
 const CONFIG = {
   email: "senator.x.x85@gmail.com",
-  askTitle: "با من میای سر قرار؟",
-  askSub: "فقط یه سوال ساده‌ست... جواب درست هم فقط یکیشه 😉",
-  dateTitle: "کی وقت داری؟",
-  dateSub: "یه تاریخ و ساعت خوب برام انتخاب کن",
-  foodTitle: "چی سفارش میدی؟",
-  foodSub: "یه چیز خوشمزه انتخاب کن که مهمونت باشی",
+  askTitle: "با من میای سر قرار نرگس خانم ؟",
+  askSub: "نه نداریم ها. امتحان کن 😏",
+  noLabel: "نه نداریم ها",
+  yesLabel: "آره 💙",
+  askHint: "امتحان کن... ولی این دکمه فراره ☁️",
+  dateTitle: "کی وقتت آزاده قشنگ؟",
+  dateSub: "یه تاریخ و ساعت بده که بدونم کی ببینم دختر قشنگمو 👀",
+  dateNext: "خب اینم شد ⭐",
+  foodTitle: "شکم کوچولوت چی می‌خواد؟",
+  foodSub: "مهمون منی، راحت انتخاب کن 😋",
   foodNext: "بریم که بریم 💌",
-  confirmTitle: "خوشحالم نگفتی نه!",
+  confirmTitle: "دیدی آخرش گفتی آره 😌",
   confirmFooter:
-    "برای اینکه ازت درخواست کنم یه وبسایت طراحی کردم، چیز مهمی نبود 🙈",
+    "این وبسایتو برای نرگس جونم درست کردم (آقایی‌ات برنامه نویسه ها😎) 🙈",
   pickupText: "پس آماده باش، خودم میام دنبالت 🚗💨",
   foods: [
     { id: "pizza", name: "پیتزا", emoji: "🍕" },
@@ -47,6 +51,13 @@ const WEEKDAYS = [
   "شنبه",
 ];
 const CLICK_EMOJIS = ["☁️", "🌤️", "💙", "🩵", "✨", "🕊️", "💎", "🌊"];
+const NO_TEASES = [
+  "نه نداریم ها",
+  "امتحان کن 😌",
+  "نرسیدی؟",
+  "باز فرار کردم",
+  "آره رو بزن دیگه",
+];
 
 const state = {
   step: 0,
@@ -55,6 +66,7 @@ const state = {
   food: null,
   noScale: 1,
   yesScale: 1,
+  noTries: 0,
   sending: false,
 };
 
@@ -156,33 +168,84 @@ function defaultDate() {
   return t.toISOString().slice(0, 10);
 }
 
+function moveNoButton(noBtn, box) {
+  const pad = 8;
+  const maxX = Math.max(pad, box.clientWidth - noBtn.offsetWidth - pad);
+  const maxY = Math.max(pad, box.clientHeight - noBtn.offsetHeight - pad);
+  let x = Math.random() * maxX;
+  let y = Math.random() * maxY;
+
+  const yesBtn = document.getElementById("yes-btn");
+  if (yesBtn) {
+    const yes = yesBtn.getBoundingClientRect();
+    const boxRect = box.getBoundingClientRect();
+    const yesLeft = yes.left - boxRect.left;
+    const yesTop = yes.top - boxRect.top;
+    const overlaps =
+      x < yesLeft + yes.width + 12 &&
+      x + noBtn.offsetWidth > yesLeft - 12 &&
+      y < yesTop + yes.height + 12 &&
+      y + noBtn.offsetHeight > yesTop - 12;
+    if (overlaps) {
+      x = x < maxX / 2 ? maxX : pad;
+      y = y < maxY / 2 ? maxY : pad;
+    }
+  }
+
+  noBtn.style.left = x + "px";
+  noBtn.style.top = y + "px";
+}
+
+function teaseNo(noBtn) {
+  noBtn.textContent = NO_TEASES[Math.min(state.noTries, NO_TEASES.length - 1)];
+}
+
+function dodgeNo(e, noBtn, yesBtn, box) {
+  e.preventDefault();
+  e.stopPropagation();
+  burst(e.clientX || 0, e.clientY || 0);
+
+  state.noTries += 1;
+  state.noScale = Math.max(0.32, state.noScale - 0.14);
+  state.yesScale = Math.min(1.6, state.yesScale + 0.12);
+
+  noBtn.style.transform = `scale(${state.noScale})`;
+  yesBtn.style.transform = `scale(${state.yesScale})`;
+  teaseNo(noBtn);
+  moveNoButton(noBtn, box);
+
+  if (state.noScale <= 0.4 || state.noTries >= 6) {
+    noBtn.disabled = true;
+    noBtn.classList.add("is-disabled");
+    noBtn.textContent = "بیخیال 😅";
+  }
+}
+
 function renderAsk() {
   bodyEl.innerHTML = `
     <div class="hero-emoji">🥺</div>
     <h1>${CONFIG.askTitle}</h1>
     <p class="sub">${CONFIG.askSub}</p>
-    <div class="actions">
-      <button class="btn btn-no" id="no-btn" type="button">نه</button>
-      <button class="btn btn-yes" id="yes-btn" type="button">💙 آره</button>
+    <div class="actions" id="ask-actions">
+      <button class="btn btn-no" id="no-btn" type="button">${CONFIG.noLabel}</button>
+      <button class="btn btn-yes" id="yes-btn" type="button">${CONFIG.yesLabel}</button>
     </div>
-    <p class="hint">دکمه نه غیرفعاله؛ فقط آره تو رو می‌بره مرحله بعد.</p>
+    <p class="hint">${CONFIG.askHint}</p>
   `;
 
+  const box = document.getElementById("ask-actions");
   const noBtn = document.getElementById("no-btn");
   const yesBtn = document.getElementById("yes-btn");
 
-  noBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    burst(e.clientX, e.clientY);
-    state.noScale = Math.max(0.35, state.noScale - 0.18);
-    state.yesScale = Math.min(1.55, state.yesScale + 0.12);
-    noBtn.style.transform = `scale(${state.noScale})`;
-    yesBtn.style.transform = `scale(${state.yesScale})`;
-    if (state.noScale <= 0.4) {
-      noBtn.disabled = true;
-      noBtn.classList.add("is-disabled");
-    }
+  requestAnimationFrame(() => {
+    noBtn.style.left = "18px";
+    noBtn.style.top = box.clientHeight / 2 - noBtn.offsetHeight / 2 + "px";
   });
+
+  const runAway = (e) => dodgeNo(e, noBtn, yesBtn, box);
+  noBtn.addEventListener("mouseenter", runAway);
+  noBtn.addEventListener("pointerdown", runAway);
+  noBtn.addEventListener("click", runAway);
 
   yesBtn.addEventListener("click", (e) => {
     burst(e.clientX, e.clientY);
@@ -206,7 +269,7 @@ function renderDate() {
         <input type="time" id="time-input" value="${timeVal}" />
       </label>
     </div>
-    <button class="btn btn-primary" id="next-date" type="button">بعدی ⭐</button>
+    <button class="btn btn-primary" id="next-date" type="button">${CONFIG.dateNext}</button>
   `;
   document.getElementById("next-date").addEventListener("click", (e) => {
     burst(e.clientX, e.clientY);
@@ -270,8 +333,8 @@ function renderConfirm() {
       پس ${when} میام دنبالت، برای ${food.name} ${food.emoji} 🥂
     </div>
     <p class="sub">${CONFIG.pickupText}</p>
-    <button class="btn btn-primary" id="send-again" type="button">ارسال جزئیات با ایمیل ☁️</button>
-    <p class="status" id="mail-status">در حال آماده کردن ایمیل...</p>
+    <button class="btn btn-primary" id="send-again" type="button">ارسال ☁️</button>
+    <p class="status" id="mail-status">بزن روی ارسال تا محمدحسین باخبر شه 😉</p>
     <p class="note">${CONFIG.confirmFooter}</p>
   `;
   document.getElementById("send-again").addEventListener("click", (e) => {
@@ -296,7 +359,7 @@ async function sendEmail(forceMailto = false) {
   const food = selectedFood();
   if (!food || state.sending) return;
   state.sending = true;
-  if (status) status.textContent = "داره جزئیات دیت برات ایمیل میشه...";
+  if (status) status.textContent = "بزن روی ارسال تا محمدحسین باخبر شه 😉";
 
   const payload = {
     _subject: `پاسخ دعوت: ${food.name} | ${state.date} ${state.time}`,
@@ -318,7 +381,7 @@ async function sendEmail(forceMailto = false) {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
-        if (status) status.textContent = "جزئیات دیت برات ایمیل شد 💌";
+        if (status) status.textContent = "جزئیات دیت ایمیل کن 💌";
         state.sending = false;
         return;
       }
