@@ -14,8 +14,18 @@ const CONFIG = {
   foodNext: "بریم که بریم 💌",
   confirmTitle: "دیدی آخرش گفتی آره 😌",
   confirmFooter:
-    "این وب‌سایتو برای نرگس جونم درست کردم (آقایی‌ات برنامه نویسه ها😎) 🙈",
+    "این وبسایتو برای نرگس جونم درست کردم (آقایی‌ات برنامه نویسه ها😎) 🙈",
   pickupText: "پس آماده باش، خودم میام دنبالت 🚗💨",
+  letterKicker: "یه نامه مخصوص خودت",
+  letterCaptionWrite: "قلم رفت روی کاغذ کاهی...",
+  letterCaptionFold: "داره نامه تا میشه...",
+  letterCaptionInsert: "رفته تو پاکت...",
+  letterCaptionClose: "در پاکت داره بسته میشه...",
+  letterCaptionWax: "موم داغ... یه کم صبر کن",
+  letterCaptionDone: "مهر و موم شد 💌",
+  letterGreeting: "نرگس خانم،",
+  letterSign: "با مهر، محمدحسین",
+  skipLetter: "بپر جلو ✨",
   foods: [
     { id: "pizza", name: "پیتزا", emoji: "🍕" },
     { id: "coffee", name: "قهوه", emoji: "☕" },
@@ -70,8 +80,12 @@ const state = {
   sending: false,
 };
 
+let ceremonyOn = false;
+const ceremonyTimers = [];
+
 const bodyEl = document.getElementById("step-body");
 const progressEl = document.getElementById("progress");
+const cardEl = document.getElementById("app");
 
 function gregorianToJalali(gy, gm, gd) {
   const gdm = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
@@ -110,8 +124,9 @@ function formatDateTime(dateValue, timeValue) {
 }
 
 function renderProgress() {
+  const visual = state.step >= 3 ? 3 : state.step;
   progressEl.innerHTML = [0, 1, 2, 3]
-    .map((i) => `<span class="dot ${i === state.step ? "active" : ""}"></span>`)
+    .map((i) => `<span class="dot ${i === visual ? "active" : ""}"></span>`)
     .join("");
 }
 
@@ -221,6 +236,60 @@ function dodgeNo(e, noBtn, yesBtn, box) {
   }
 }
 
+function later(ms) {
+  return new Promise((resolve) => {
+    const id = setTimeout(resolve, ms);
+    ceremonyTimers.push(id);
+  });
+}
+
+function stopCeremony() {
+  ceremonyOn = false;
+  while (ceremonyTimers.length) clearTimeout(ceremonyTimers.pop());
+}
+
+function finishCeremony() {
+  stopCeremony();
+  state.step = 4;
+  render();
+}
+
+function letterLines() {
+  const food = selectedFood();
+  const when = formatDateTime(state.date, state.time);
+  return [
+    CONFIG.letterGreeting,
+    `پس ${when}`,
+    `میام دنبالت، برای ${food.name} ${food.emoji}`,
+    "خودم میام دنبالت.",
+    CONFIG.letterSign,
+  ];
+}
+
+function typeLine(el, text, quill) {
+  return new Promise((resolve) => {
+    let i = 0;
+    el.textContent = "";
+    const tick = () => {
+      if (!ceremonyOn) return resolve();
+      i += 1;
+      el.textContent = text.slice(0, i);
+      if (quill) {
+        const lineTop = el.offsetTop + 6;
+        quill.style.top = lineTop + "px";
+      }
+      if (i < text.length) {
+        const pause = /[،.!؟]/.test(text[i - 1]) ? 90 : 34;
+        const id = setTimeout(tick, pause);
+        ceremonyTimers.push(id);
+      } else {
+        resolve();
+      }
+    };
+    tick();
+  });
+}
+
 function renderAsk() {
   bodyEl.innerHTML = `
     <div class="hero-emoji">🥺</div>
@@ -315,7 +384,6 @@ function renderFood() {
     burst(e.clientX, e.clientY);
     state.step = 3;
     render();
-    sendEmail();
   });
 }
 
@@ -323,11 +391,109 @@ function selectedFood() {
   return CONFIG.foods.find((f) => f.id === state.food);
 }
 
+function renderLetter() {
+  const lines = letterLines();
+  bodyEl.innerHTML = `
+    <p class="ceremony-kicker">${CONFIG.letterKicker}</p>
+    <div class="desk" id="desk">
+      <div class="paper" id="paper">
+        ${lines.map((_, i) => `<p class="paper-line ${i === lines.length - 1 ? "sign" : ""}" id="line-${i}"></p>`).join("")}
+        <div class="quill" id="quill">🪶</div>
+      </div>
+      <div class="envelope" id="envelope">
+        <div class="env-back"></div>
+        <div class="env-flap"></div>
+        <div class="env-front"></div>
+        <div class="wax-drop"></div>
+        <div class="wax-seal"><span>♥</span></div>
+      </div>
+    </div>
+    <p class="ceremony-caption" id="ceremony-caption">${CONFIG.letterCaptionWrite}</p>
+    <button class="btn btn-ghost" id="skip-ceremony" type="button">${CONFIG.skipLetter}</button>
+  `;
+
+  document.getElementById("skip-ceremony").addEventListener("click", (e) => {
+    burst(e.clientX, e.clientY);
+    finishCeremony();
+  });
+
+  playLetter(lines);
+}
+
+async function playLetter(lines) {
+  stopCeremony();
+  ceremonyOn = true;
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    finishCeremony();
+    return;
+  }
+
+  const paper = document.getElementById("paper");
+  const envelope = document.getElementById("envelope");
+  const quill = document.getElementById("quill");
+  const caption = document.getElementById("ceremony-caption");
+  if (!paper || !envelope) return;
+
+  const say = (text) => {
+    if (caption) caption.textContent = text;
+  };
+
+  await later(80);
+  if (!ceremonyOn) return;
+  paper.classList.add("is-in");
+  envelope.classList.add("is-ready");
+  quill.classList.add("is-on");
+  say(CONFIG.letterCaptionWrite);
+
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!ceremonyOn) return;
+    const el = document.getElementById(`line-${i}`);
+    await typeLine(el, lines[i], quill);
+    await later(160);
+  }
+
+  if (!ceremonyOn) return;
+  quill.classList.remove("is-on");
+  await later(520);
+
+  if (!ceremonyOn) return;
+  say(CONFIG.letterCaptionFold);
+  paper.classList.add("is-folding");
+  await later(780);
+
+  if (!ceremonyOn) return;
+  say(CONFIG.letterCaptionInsert);
+  envelope.classList.add("is-focus");
+  paper.classList.remove("is-folding");
+  paper.classList.add("is-inserting");
+  await later(980);
+
+  if (!ceremonyOn) return;
+  say(CONFIG.letterCaptionClose);
+  paper.classList.add("is-hidden");
+  envelope.classList.add("is-closed");
+  await later(860);
+
+  if (!ceremonyOn) return;
+  say(CONFIG.letterCaptionWax);
+  envelope.classList.add("is-dripping");
+  await later(540);
+
+  if (!ceremonyOn) return;
+  envelope.classList.add("is-sealed");
+  say(CONFIG.letterCaptionDone);
+  await later(1450);
+
+  if (!ceremonyOn) return;
+  finishCeremony();
+}
+
 function renderConfirm() {
   const food = selectedFood();
   const when = formatDateTime(state.date, state.time);
   bodyEl.innerHTML = `
-    <div class="hero-emoji">🎉</div>
+    <div class="mini-envelope" aria-hidden="true"><i></i><em></em><b></b></div>
     <h1>${CONFIG.confirmTitle}</h1>
     <div class="result">
       پس ${when} میام دنبالت، برای ${food.name} ${food.emoji} 🥂
@@ -339,7 +505,7 @@ function renderConfirm() {
   `;
   document.getElementById("send-again").addEventListener("click", (e) => {
     burst(e.clientX, e.clientY);
-    sendEmail(true);
+    sendEmail();
   });
 }
 
@@ -359,7 +525,7 @@ async function sendEmail(forceMailto = false) {
   const food = selectedFood();
   if (!food || state.sending) return;
   state.sending = true;
-  if (status) status.textContent = "بزن روی ارسال تا محمدحسین باخبر شه 😉";
+  if (status) status.textContent = "داره جزئیات دیت برات ایمیل میشه...";
 
   const payload = {
     _subject: `پاسخ دعوت: ${food.name} | ${state.date} ${state.time}`,
@@ -381,7 +547,7 @@ async function sendEmail(forceMailto = false) {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
-        if (status) status.textContent = "جزئیات دیت ایمیل کن 💌";
+        if (status) status.textContent = "جزئیات دیت ایمیل شد 💌";
         state.sending = false;
         return;
       }
@@ -399,10 +565,13 @@ async function sendEmail(forceMailto = false) {
 }
 
 function render() {
+  stopCeremony();
+  cardEl.classList.toggle("is-ceremony", state.step === 3);
   renderProgress();
   if (state.step === 0) renderAsk();
   else if (state.step === 1) renderDate();
   else if (state.step === 2) renderFood();
+  else if (state.step === 3) renderLetter();
   else renderConfirm();
 }
 
