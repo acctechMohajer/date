@@ -14,7 +14,7 @@ const CONFIG = {
   foodNext: "بریم که بریم 💌",
   confirmTitle: "دیدی آخرش گفتی آره 😌",
   confirmFooter:
-    "این وبسایتو برای نرگس جونم درست کردم (آقایی‌ات برنامه نویسه ها😎) 🙈",
+    "این وب‌سایت رو برای نرگس جونم درست کردم (آقایی‌ات برنامه نویسه ها😎) 🙈",
   pickupText: "پس آماده باش، خودم میام دنبالت 🚗💨",
   letterKicker: "یه نامه مخصوص خودت",
   letterCaptionWrite: "قلم رفت روی کاغذ کاهی...",
@@ -78,6 +78,9 @@ const state = {
   yesScale: 1,
   noTries: 0,
   sending: false,
+  sent: false,
+  autoStarted: false,
+  mailStatus: "داره جزئیات دیت خودکار ایمیل میشه...",
 };
 
 let ceremonyOn = false;
@@ -121,6 +124,27 @@ function formatDateTime(dateValue, timeValue) {
   const weekday = WEEKDAYS[dt.getDay()];
   const [hh, mm] = timeValue.split(":");
   return `${weekday} ${jd} ${MONTHS[jm - 1]} ساعت ${hh}:${mm}`;
+}
+
+function sendKey() {
+  return `invite-sent:${CONFIG.email}:${state.date}:${state.time}:${state.food}`;
+}
+
+function alreadySent() {
+  try {
+    return sessionStorage.getItem(sendKey()) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markSent() {
+  state.sent = true;
+  try {
+    sessionStorage.setItem(sendKey(), "1");
+  } catch {
+    /* ignore */
+  }
 }
 
 function renderProgress() {
@@ -489,9 +513,20 @@ async function playLetter(lines) {
   finishCeremony();
 }
 
+function sendButtonLabel() {
+  if (state.sent) return "ارسال شد 💌";
+  if (state.sending) return "داره میره...";
+  return "دوباره بفرست ☁️";
+}
+
 function renderConfirm() {
   const food = selectedFood();
   const when = formatDateTime(state.date, state.time);
+  if (alreadySent()) {
+    state.sent = true;
+    state.mailStatus = "جزئیات دیت ایمیل شد 💌";
+  }
+
   bodyEl.innerHTML = `
     <div class="mini-envelope" aria-hidden="true"><i></i><em></em><b></b></div>
     <h1>${CONFIG.confirmTitle}</h1>
@@ -499,14 +534,22 @@ function renderConfirm() {
       پس ${when} میام دنبالت، برای ${food.name} ${food.emoji} 🥂
     </div>
     <p class="sub">${CONFIG.pickupText}</p>
-    <button class="btn btn-primary" id="send-again" type="button">ارسال ☁️</button>
-    <p class="status" id="mail-status">بزن روی ارسال تا محمدحسین باخبر شه 😉</p>
+    <button class="btn btn-primary" id="send-again" type="button" ${
+      state.sending || state.sent ? "disabled" : ""
+    }>${sendButtonLabel()}</button>
+    <p class="status" id="mail-status">${state.mailStatus}</p>
     <p class="note">${CONFIG.confirmFooter}</p>
   `;
+
   document.getElementById("send-again").addEventListener("click", (e) => {
     burst(e.clientX, e.clientY);
     sendEmail();
   });
+
+  if (!state.autoStarted && !state.sent) {
+    state.autoStarted = true;
+    sendEmail();
+  }
 }
 
 function mailBody() {
@@ -520,15 +563,29 @@ function mailBody() {
   ].join("\n");
 }
 
-async function sendEmail(forceMailto = false) {
+function setMailUi() {
   const status = document.getElementById("mail-status");
+  const btn = document.getElementById("send-again");
+  if (status) status.textContent = state.mailStatus;
+  if (btn) {
+    btn.textContent = sendButtonLabel();
+    btn.disabled = state.sending || state.sent;
+  }
+}
+
+async function sendEmail() {
   const food = selectedFood();
-  if (!food || state.sending) return;
+  if (!food || state.sending || state.sent) return;
+
   state.sending = true;
-  if (status) status.textContent = "داره جزئیات دیت برات ایمیل میشه...";
+  state.mailStatus = "داره جزئیات دیت خودکار ایمیل میشه...";
+  setMailUi();
 
   const payload = {
+    name: "نرگس",
     _subject: `پاسخ دعوت: ${food.name} | ${state.date} ${state.time}`,
+    _captcha: "false",
+    _template: "box",
     date: state.date,
     time: state.time,
     jalali: formatDateTime(state.date, state.time),
@@ -537,30 +594,40 @@ async function sendEmail(forceMailto = false) {
   };
 
   try {
-    if (!forceMailto) {
-      const res = await fetch(`https://formsubmit.co/ajax/${CONFIG.email}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        if (status) status.textContent = "جزئیات دیت ایمیل شد 💌";
-        state.sending = false;
-        return;
-      }
+    const res = await fetch(`https://formsubmit.co/ajax/${CONFIG.email}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    const msg = String(data.message || "");
+    const ok = res.ok && (data.success === true || data.success === "true");
+    const needsActivation = /activat|confirm your email|activation link/i.test(
+      msg,
+    );
+
+    if (ok && !needsActivation) {
+      markSent();
+      state.mailStatus = "جزئیات دیت ایمیل شد 💌";
+      return;
     }
-    throw new Error("fallback");
+
+    if (needsActivation) {
+      state.mailStatus =
+        "اولین ارساله. برو جیمیل (و پوشهٔ Spam) لینک Activate Form را بزن؛ بعد همین‌جا دوباره بفرست.";
+      return;
+    }
+
+    throw new Error("send-failed");
   } catch {
-    const mailto = `mailto:${CONFIG.email}?subject=${encodeURIComponent(payload._subject)}&body=${encodeURIComponent(mailBody())}`;
-    window.location.href = mailto;
-    if (status)
-      status.textContent =
-        "اگر فرم‌سرویس فعال نبود، برنامه ایمیل باز شد تا همان جزئیات را بفرستی.";
+    state.mailStatus = "ارسال خودکار گیر کرد. دکمه را بزن تا دوباره تلاش کنم.";
   } finally {
     state.sending = false;
+    setMailUi();
   }
 }
 
