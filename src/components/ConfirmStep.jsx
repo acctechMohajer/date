@@ -3,12 +3,9 @@ import { CONFIG } from "../config";
 import { formatDateTime } from "../lib/jalali";
 import {
   alreadySent,
-  markSent,
-  sendInviteEmail,
+  sendInviteOnce,
   sendKey,
 } from "../lib/email";
-
-const autoStartedKeys = new Set();
 
 function sendButtonLabel(sent, sending) {
   if (sent) return "ارسال شد 💌";
@@ -33,21 +30,20 @@ export default function ConfirmStep({ date, time, food, burst }) {
   const busy = useRef(false);
 
   async function sendEmail() {
-    if (!food || busy.current || sent) return;
+    if (!food || sent || busy.current) return;
     busy.current = true;
 
     setSending(true);
     setMailStatus("داره جزئیات دیت خودکار ایمیل میشه...");
 
     try {
-      const { ok, needsActivation } = await sendInviteEmail({
+      const { ok, needsActivation } = await sendInviteOnce({
         date,
         time,
         food,
       });
 
       if (ok && !needsActivation) {
-        markSent(key);
         setSent(true);
         setMailStatus("جزئیات دیت ایمیل شد 💌");
         return;
@@ -70,14 +66,57 @@ export default function ConfirmStep({ date, time, food, burst }) {
   }
 
   useEffect(() => {
-    if (autoStartedKeys.has(key) || sent) return;
-    autoStartedKeys.add(key);
-    const id = window.setTimeout(() => {
-      sendEmail();
-    }, 0);
-    return () => window.clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-send once on mount
-  }, []);
+    let cancelled = false;
+
+    async function run() {
+      if (alreadySent(key)) {
+        setSent(true);
+        setMailStatus("جزئیات دیت ایمیل شد 💌");
+        setSending(false);
+        return;
+      }
+
+      setSending(true);
+      setMailStatus("داره جزئیات دیت خودکار ایمیل میشه...");
+
+      try {
+        const { ok, needsActivation } = await sendInviteOnce({
+          date,
+          time,
+          food,
+        });
+        if (cancelled) return;
+
+        if (ok && !needsActivation) {
+          setSent(true);
+          setMailStatus("جزئیات دیت ایمیل شد 💌");
+          return;
+        }
+
+        if (needsActivation) {
+          setMailStatus(
+            "اولین ارساله. برو جیمیل (و پوشهٔ Spam) لینک Activate Form را بزن؛ بعد همین‌جا دوباره بفرست.",
+          );
+          return;
+        }
+
+        throw new Error("send-failed");
+      } catch {
+        if (!cancelled) {
+          setMailStatus(
+            "ارسال خودکار گیر کرد. دکمه را بزن تا دوباره تلاش کنم.",
+          );
+        }
+      } finally {
+        if (!cancelled) setSending(false);
+      }
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [key, date, time, food]);
 
   const when = formatDateTime(date, time);
 

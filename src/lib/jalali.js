@@ -1,4 +1,17 @@
+import DateObject from "react-date-object";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
 import { MONTHS, WEEKDAYS } from "../config";
+
+export { persian, persian_fa };
+
+function pad(n) {
+  return String(n).padStart(2, "0");
+}
+
+export function toISODate(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
 export function gregorianToJalali(gy, gm, gd) {
   const gdm = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
@@ -39,5 +52,31 @@ export function formatDateTime(dateValue, timeValue) {
 export function defaultDate() {
   const t = new Date();
   t.setDate(t.getDate() + 1);
-  return t.toISOString().slice(0, 10);
+  return toISODate(t);
+}
+
+export function defaultPickerDate() {
+  const t = new Date();
+  t.setDate(t.getDate() + 1);
+  return new DateObject({
+    date: t,
+    calendar: persian,
+    locale: persian_fa,
+  });
+}
+
+export function dateObjectFromISO(iso) {
+  if (!iso) return defaultPickerDate();
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return defaultPickerDate();
+  return new DateObject({
+    date: new Date(y, m - 1, d),
+    calendar: persian,
+    locale: persian_fa,
+  });
+}
+
+export function isoFromDateObject(value) {
+  if (!value) return "";
+  return toISODate(value.toDate());
 }

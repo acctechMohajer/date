@@ -1,6 +1,8 @@
 import { CONFIG } from "../config";
 import { formatDateTime } from "./jalali";
 
+const inflight = new Map();
+
 export function sendKey({ email, date, time, food }) {
   return `invite-sent:${email}:${date}:${time}:${food}`;
 }
@@ -61,4 +63,32 @@ export async function sendInviteEmail({ date, time, food }) {
   );
 
   return { ok, needsActivation };
+}
+
+export function sendInviteOnce({ date, time, food }) {
+  const key = sendKey({
+    email: CONFIG.email,
+    date,
+    time,
+    food: food.id,
+  });
+
+  if (alreadySent(key)) {
+    return Promise.resolve({ ok: true, needsActivation: false });
+  }
+
+  const pending = inflight.get(key);
+  if (pending) return pending;
+
+  const request = sendInviteEmail({ date, time, food })
+    .then((result) => {
+      if (result.ok && !result.needsActivation) markSent(key);
+      return result;
+    })
+    .finally(() => {
+      inflight.delete(key);
+    });
+
+  inflight.set(key, request);
+  return request;
 }

@@ -328,10 +328,119 @@ select:focus {
   box-shadow: 0 0 0 4px rgba(41, 182, 246, 0.15);
 }
 
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  direction: ltr;
+}
+
+.time-picker select {
+  flex: 1;
+  text-align: center;
+  direction: ltr;
+}
+
+.time-picker span {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--sky-deep);
+}
+
+.shamsi-picker {
+  width: 100%;
+  display: block;
+}
+
+.shamsi-picker .rmdp-container,
+.shamsi-picker.rmdp-container {
+  width: 100%;
+  display: block;
+}
+
+.shamsi-input,
+.rmdp-input.shamsi-input {
+  width: 100%;
+  height: auto;
+  margin: 0;
+  border: 1.5px solid #c5ebf8;
+  background: #f4fcff;
+  border-radius: 14px;
+  padding: 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  box-shadow: none;
+  cursor: pointer;
+  text-align: right;
+}
+
+.shamsi-input:focus {
+  border-color: var(--sky-3);
+  box-shadow: 0 0 0 4px rgba(41, 182, 246, 0.15);
+}
+
+.rmdp-wrapper,
+.rmdp-calendar {
+  font-family: "Vazirmatn", Tahoma, sans-serif;
+}
+
+.rmdp-day.rmdp-today span {
+  background-color: #b9ecff;
+  color: #0277bd;
+}
+
+.rmdp-day.rmdp-selected span:not(.highlight) {
+  background-color: #039be5;
+  box-shadow: 0 0 3px #81d4fa;
+}
+
+.rmdp-week-day {
+  color: #039be5;
+}
+
+.rmdp-arrow-container:hover {
+  background-color: #039be5;
+  box-shadow: 0 0 3px #81d4fa;
+}
+
+.rmdp-day:not(.rmdp-disabled, .rmdp-day-hidden) span:hover {
+  background-color: #4fc3f7;
+}
+
+.food-step {
+  min-height: 0;
+  max-height: min(80dvh, 620px);
+  display: flex;
+  flex-direction: column;
+}
+
+.food-step .hero-emoji,
+.food-step h1,
+.food-step .sub,
+.food-step > .btn-primary {
+  flex: 0 0 auto;
+}
+
+.food-step .sub {
+  margin-bottom: 14px;
+}
+
 .food-grid {
+  min-height: 0;
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  align-content: start;
   gap: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 4px 4px 0;
+  box-shadow: inset 0 -6px 12px rgba(3, 155, 229, 0.08);
+}
+
+.food-step > .btn-primary {
+  margin-top: 14px;
 }
 
 .food {

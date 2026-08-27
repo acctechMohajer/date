@@ -43,7 +43,13 @@ function App() {
   const goLetterDone = useCallback(() => setStep(4), []);
 
   function handleStageClick(e) {
-    if (e.target.closest("button, input, label, select")) return;
+    if (
+      e.target.closest(
+        "button, input, label, select, .rmdp-container, .rmdp-calendar, .rmdp-wrapper, .shamsi-picker",
+      )
+    ) {
+      return;
+    }
     burst(e.clientX, e.clientY);
   }
 

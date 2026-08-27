@@ -2,7 +2,7 @@ import { CONFIG } from "../config";
 
 export default function FoodStep({ food, onSelect, onNext, burst }) {
   return (
-    <>
+    <section className="step food-step">
       <div className="hero-emoji">🍽️</div>
       <h1>{CONFIG.foodTitle}</h1>
       <p className="sub">{CONFIG.foodSub}</p>
@@ -34,6 +34,6 @@ export default function FoodStep({ food, onSelect, onNext, burst }) {
       >
         {CONFIG.foodNext}
       </button>
-    </>
+    </section>
   );
 }
