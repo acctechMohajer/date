@@ -36,12 +36,14 @@ export const CONFIG = {
     { id: "shishlik", name: "شیشلیک", emoji: "🍖" },
     { id: "nachos", name: "ناچوز", emoji: "🧀" },
     { id: "eskimo", name: "اسکیمو", emoji: "🍦" },
+    { id: "ice_cream", name: "بستنی", emoji: "🍨" },
     { id: "waffle", name: "وافل", emoji: "🧇" },
     { id: "crepe", name: "کرپ", emoji: "🥞" },
     { id: "croissant", name: "کروسان بستنی", emoji: "🥐" },
     { id: "chocolate", name: "شکلات", emoji: "🍫" },
     { id: "shole", name: "شله", emoji: "🍲" },
     { id: "maize", name: "بلال", emoji: "🌽" },
+    { id: "baklava", name: "باقلوا", emoji: "🍮" },
   ],
 };
 
