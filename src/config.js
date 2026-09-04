@@ -1,0 +1,83 @@
+export const CONFIG = {
+  email: "senator.x.x85@gmail.com",
+  askTitle: "با من میای سر قرار نرگس خانم ؟",
+  askSub: "نه نداریم ها. امتحان کن 😏",
+  noLabel: "نه نداریم ها",
+  yesLabel: "آره 💙",
+  askHint: "امتحان کن... ولی این دکمه فراره ☁️",
+  dateTitle: "کی وقتت آزاده قشنگ؟",
+  dateSub: "یه تاریخ و ساعت بده که بدونم کی ببینم دختر قشنگمو 👀",
+  dateNext: "خب اینم شد ⭐",
+  foodTitle: "شکم کوچولوت چی می‌خواد؟",
+  foodSub: "مهمون منی، راحت انتخاب کن 😋",
+  foodNext: "بریم که بریم 💌",
+  confirmTitle: "دیدی آخرش گفتی آره 😌",
+  confirmFooter:
+    "این وب‌سایت برای نرگس جونمه و فقط برای تو ساختم. لطفا به کسی نشونش نده و خودت هم نگهش دار😉💙",
+  pickupText: "پس آماده باش، خودم میام دنبالت 🚗💨",
+  letterKicker: "یه نامه مخصوص خودت",
+  letterCaptionWrite: "قلم رفت روی کاغذ ..",
+  letterCaptionFold: "داره نامه تا میشه...",
+  letterCaptionInsert: "رفته تو پاکت...",
+  letterCaptionClose: "در پاکت داره بسته میشه...",
+  letterCaptionWax: "موم داغ... یه کم صبر کن",
+  letterCaptionDone: "مهر و موم شد 💌",
+  letterGreeting: "نرگس خانم،",
+  letterSign: "با عشق، محمدحسین",
+  skipLetter: "بپر جلو ✨",
+  foods: [
+    { id: "coffee", name: "قهوه", emoji: "☕" },
+    { id: "tea", name: "چای", emoji: "🍵" },
+    { id: "pizza", name: "پیتزا", emoji: "🍕" },
+    { id: "berger", name: "برگر", emoji: "🍔" },
+    { id: "sandwich", name: "ساندویچ", emoji: "🥪" },
+    { id: "pasta", name: "پاستا", emoji: "🍝" },
+    { id: "kubideh", name: "کوبیده", emoji: "🫔" },
+    { id: "shishlik", name: "شیشلیک", emoji: "🍖" },
+    { id: "nachos", name: "ناچوز", emoji: "🧀" },
+    { id: "eskimo", name: "اسکیمو", emoji: "🍦" },
+    { id: "ice_cream", name: "بستنی", emoji: "🍨" },
+    { id: "waffle", name: "وافل", emoji: "🧇" },
+    { id: "crepe", name: "کرپ", emoji: "🥞" },
+    { id: "croissant", name: "کروسان بستنی", emoji: "🥐" },
+    { id: "chocolate", name: "شکلات", emoji: "🍫" },
+    { id: "shole", name: "شله", emoji: "🍲" },
+    { id: "maize", name: "بلال", emoji: "🌽" },
+    { id: "baklava", name: "باقلوا", emoji: "🍮" },
+  ],
+};
+
+export const MONTHS = [
+  "فروردین",
+  "اردیبهشت",
+  "خرداد",
+  "تیر",
+  "مرداد",
+  "شهریور",
+  "مهر",
+  "آبان",
+  "آذر",
+  "دی",
+  "بهمن",
+  "اسفند",
+];
+
+export const WEEKDAYS = [
+  "یکشنبه",
+  "دوشنبه",
+  "سه‌شنبه",
+  "چهارشنبه",
+  "پنجشنبه",
+  "جمعه",
+  "شنبه",
+];
+
+export const CLICK_EMOJIS = ["☁️", "🌤️", "💙", "🩵", "✨", "🕊️", "💎", "🌊"];
+
+export const NO_TEASES = [
+  "نه نداریم ها",
+  "امتحان کن 😌",
+  "نرسیدی؟",
+  "باز فرار کردم",
+  "آره رو بزن دیگه",
+];
