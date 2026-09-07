@@ -426,17 +426,48 @@ select:focus {
   margin-bottom: 14px;
 }
 
-.food-grid {
+.food-list {
   min-height: 0;
   flex: 1 1 auto;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 4px 14px 0;
+}
+
+.food-category {
+  text-align: right;
+  border: 1px solid rgba(3, 155, 229 , 0.25);
+  border-radius: 18px;
+  box-shadow: inset 0 -6px 12px rgba(3, 155, 229, 0.08);
+  padding: 4px 6px;
+}
+
+.food-category-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 0 4px 10px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--sky-deep);
+}
+/* 
+.food-category-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #c5ebf8, transparent);
+} */
+
+.food-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   align-content: start;
   gap: 10px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 4px 4px 4px 0;
-  box-shadow: inset 0 -6px 12px rgba(3, 155, 229, 0.08);
 }
 
 .food-step > .btn-primary {
