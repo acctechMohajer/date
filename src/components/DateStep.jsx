@@ -9,7 +9,7 @@ import {
   persian_fa,
 } from "../lib/jalali";
 
-export default function DateStep({ date, time, onChange, onNext, burst }) {
+export default function DateStep({ date, time, onChange, onNext, burst, theme }) {
   const [dateVal, setDateVal] = useState(date || defaultDate());
   const [timeVal, setTimeVal] = useState(time || "16:21");
   const [pickerValue, setPickerValue] = useState(() =>
@@ -21,11 +21,15 @@ export default function DateStep({ date, time, onChange, onNext, burst }) {
     setDateVal(isoFromDateObject(next));
   }
 
+  const heroEmoji = theme?.dateHero || "📅";
+  const dateSub = theme?.dateSub || CONFIG.dateSub;
+  const dateNext = theme?.dateNext || CONFIG.dateNext;
+
   return (
     <>
-      <div className="hero-emoji">📅</div>
+      <div className="hero-emoji">{heroEmoji}</div>
       <h1>{CONFIG.dateTitle}</h1>
-      <p className="sub">{CONFIG.dateSub}</p>
+      <p className="sub">{dateSub}</p>
       <div className="fields">
         <label>
           تاریخ شمسی
@@ -89,7 +93,7 @@ export default function DateStep({ date, time, onChange, onNext, burst }) {
           onNext();
         }}
       >
-        {CONFIG.dateNext}
+        {dateNext}
       </button>
     </>
   );

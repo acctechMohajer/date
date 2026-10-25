@@ -44,7 +44,7 @@ function typeLine(el, text, quill, alive, timers) {
   });
 }
 
-export default function LetterStep({ date, time, food, onDone, burst }) {
+export default function LetterStep({ date, time, food, onDone, burst, theme }) {
   const lines = letterLines(date, time, food);
   const [caption, setCaption] = useState(CONFIG.letterCaptionWrite);
   const [paperClass, setPaperClass] = useState("paper");
@@ -54,6 +54,10 @@ export default function LetterStep({ date, time, food, onDone, burst }) {
   const quillRef = useRef(null);
   const timers = useRef([]);
   const alive = useRef(true);
+
+  const letterKicker = theme?.letterKicker || CONFIG.letterKicker;
+  const waxSealIcon = theme?.waxSeal || "♥";
+  const skipLetter = theme?.skipLetter || `بپر جلو ${theme?.icon || "✨"}`;
 
   useEffect(() => {
     const script = letterLines(date, time, food);
@@ -131,7 +135,7 @@ export default function LetterStep({ date, time, food, onDone, burst }) {
 
   return (
     <>
-      <p className="ceremony-kicker">{CONFIG.letterKicker}</p>
+      <p className="ceremony-kicker">{letterKicker}</p>
       <div className="desk">
         <div className={paperClass}>
           {lines.map((_, i) => (
@@ -156,7 +160,7 @@ export default function LetterStep({ date, time, food, onDone, burst }) {
           <div className="env-front" />
           <div className="wax-drop" />
           <div className="wax-seal">
-            <span>♥</span>
+            <span>{waxSealIcon}</span>
           </div>
         </div>
       </div>
@@ -169,7 +173,7 @@ export default function LetterStep({ date, time, food, onDone, burst }) {
           onDone();
         }}
       >
-        {CONFIG.skipLetter}
+        {skipLetter}
       </button>
     </>
   );
