@@ -7,13 +7,13 @@ import {
   sendKey,
 } from "../lib/email";
 
-function sendButtonLabel(sent, sending) {
+function sendButtonLabel(sent, sending, themeIcon) {
   if (sent) return "ارسال شد 💌";
   if (sending) return "داره میره...";
-  return "دوباره بفرست ☁️";
+  return `دوباره بفرست ${themeIcon || "💌"}`;
 }
 
-export default function ConfirmStep({ date, time, food, burst }) {
+export default function ConfirmStep({ date, time, food, burst, theme }) {
   const key = sendKey({
     email: CONFIG.email,
     date,
@@ -28,6 +28,11 @@ export default function ConfirmStep({ date, time, food, burst }) {
       : "داره جزئیات دیت خودکار ایمیل میشه...",
   );
   const busy = useRef(false);
+
+  const pickupText = theme?.pickupText || CONFIG.pickupText;
+  const confirmFooter = theme?.confirmFooter || CONFIG.confirmFooter;
+  const resultEmoji = theme?.confirmResultEmoji || "🥂";
+  const themeIcon = theme?.icon || "💌";
 
   async function sendEmail() {
     if (!food || sent || busy.current) return;
@@ -129,9 +134,9 @@ export default function ConfirmStep({ date, time, food, burst }) {
       </div>
       <h1>{CONFIG.confirmTitle}</h1>
       <div className="result">
-        پس {when} میام دنبالت، برای {food.name} {food.emoji} 🥂
+        پس {when} میام دنبالت، برای {food.name} {food.emoji} {resultEmoji}
       </div>
-      <p className="sub">{CONFIG.pickupText}</p>
+      <p className="sub">{pickupText}</p>
       <button
         className="btn btn-primary"
         type="button"
@@ -141,10 +146,10 @@ export default function ConfirmStep({ date, time, food, burst }) {
           sendEmail();
         }}
       >
-        {sendButtonLabel(sent, sending)}
+        {sendButtonLabel(sent, sending, themeIcon)}
       </button>
       <p className="status">{mailStatus}</p>
-      <p className="note">{CONFIG.confirmFooter}</p>
+      <p className="note">{confirmFooter}</p>
     </>
   );
 }
