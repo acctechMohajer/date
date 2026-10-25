@@ -1,13 +1,19 @@
 import { CONFIG } from "../config";
 
-export default function FoodStep({ food, onSelect, onNext, burst }) {
+export default function FoodStep({ food, onSelect, onNext, burst, theme }) {
+  const heroEmoji = theme?.foodHero || "🍽️";
+  const foodTitle = theme?.foodTitle || CONFIG.foodTitle;
+  const foodSub = theme?.foodSub || CONFIG.foodSub;
+  const foodCategories = theme?.foodCategories || CONFIG.foodCategories;
+  const foodNext = theme?.foodNext || CONFIG.foodNext;
+
   return (
     <section className="step food-step">
-      <div className="hero-emoji">🍽️</div>
-      <h1>{CONFIG.foodTitle}</h1>
-      <p className="sub">{CONFIG.foodSub}</p>
+      <div className="hero-emoji">{heroEmoji}</div>
+      <h1>{foodTitle}</h1>
+      <p className="sub">{foodSub}</p>
       <div className="food-list">
-        {CONFIG.foodCategories.map((category) => (
+        {foodCategories.map((category) => (
           <div key={category.id} className="food-category">
             <h2 className="food-category-title">{category.title}</h2>
             <div className="food-grid">
@@ -41,7 +47,7 @@ export default function FoodStep({ food, onSelect, onNext, burst }) {
           onNext();
         }}
       >
-        {CONFIG.foodNext}
+        {foodNext}
       </button>
     </section>
   );

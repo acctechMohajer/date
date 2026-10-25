@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { CONFIG, NO_TEASES } from "../config";
 
-export default function AskStep({ onYes, burst }) {
+export default function AskStep({ onYes, burst, theme }) {
   const boxRef = useRef(null);
   const noRef = useRef(null);
   const yesRef = useRef(null);
@@ -21,9 +21,13 @@ export default function AskStep({ onYes, burst }) {
     });
   }, []);
 
+  const teases = theme?.noTeases || NO_TEASES;
   const noLabel = noDisabled
     ? "بیخیال 😅"
-    : NO_TEASES[Math.min(noTries, NO_TEASES.length - 1)];
+    : teases[Math.min(noTries, teases.length - 1)];
+
+  const yesLabel = theme?.yesLabel || CONFIG.yesLabel;
+  const askHint = theme?.askHint || CONFIG.askHint;
 
   function moveNoButton() {
     const box = boxRef.current;
@@ -109,10 +113,10 @@ export default function AskStep({ onYes, burst }) {
             onYes();
           }}
         >
-          {CONFIG.yesLabel}
+          {yesLabel}
         </button>
       </div>
-      <p className="hint">{CONFIG.askHint}</p>
+      <p className="hint">{askHint}</p>
     </>
   );
 }
